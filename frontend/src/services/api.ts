@@ -1,3 +1,5 @@
+import type { HealthResponse, ReturnsResponse } from "../types/api";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -18,14 +20,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  health: () => request<{
-    status: string;
-    service: string;
-    version: string;
-  }>("/api/health"),
+  health: () => request<HealthResponse>("/api/health"),
 
   calculateReturns: (returns: number[]) =>
-    request("/quant/returns", {
+    request<ReturnsResponse>("/quant/returns", {
       method: "POST",
       body: JSON.stringify({ returns }),
     }),

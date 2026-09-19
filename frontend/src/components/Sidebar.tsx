@@ -1,4 +1,7 @@
 import { NavLink } from "react-router-dom";
+import { ConnectionStatus } from "./ConnectionStatus";
+import { useEffect, useState } from "react";
+import { api } from "../services/api";
 
 const navigation = [
   { label: "Dashboard", path: "/" },
@@ -10,6 +13,15 @@ const navigation = [
 ];
 
 export function Sidebar() {
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.health()
+      .then(() => setConnected(true))
+      .catch(() => setConnected(false))
+      .finally(() => setLoading(false));
+  }, []);
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -34,10 +46,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="sidebar-footer">
-        <span className="status-dot" />
-        API connected
-      </div>
+      <ConnectionStatus connected={connected} loading={loading} />
     </aside>
   );
 }

@@ -13,9 +13,3 @@ export interface ReturnsResponse {
   sortino_ratio: number;
   maximum_drawdown: number;
 }
-
-export interface QuantMetric {
-  label: string;
-  value: string;
-  description?: string;
-}

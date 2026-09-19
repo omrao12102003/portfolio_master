@@ -1,31 +1,71 @@
+import { useEffect, useState } from "react";
 import { MetricCard } from "../components/MetricCard";
+import { api } from "../services/api";
+import type { ReturnsResponse } from "../types/api";
 
-const metrics = [
-  {
-    label: "Portfolio Value",
-    value: "£100,000",
-    change: "+4.82%",
-    description: "Current simulated capital",
-  },
-  {
-    label: "Annualized Return",
-    value: "12.40%",
-    change: "+1.84%",
-    description: "Based on selected period",
-  },
-  {
-    label: "Volatility",
-    value: "14.72%",
-    description: "Annualized portfolio risk",
-  },
-  {
-    label: "Sharpe Ratio",
-    value: "0.84",
-    description: "Risk-adjusted return",
-  },
+const SAMPLE_RETURNS = [
+  0.004,
+  0.002,
+  -0.003,
+  0.006,
+  0.003,
+  -0.001,
+  0.005,
+  0.002,
+  -0.002,
+  0.004,
+  0.003,
+  0.001,
 ];
 
+function formatPercent(value: number) {
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function formatRatio(value: number) {
+  return Number.isFinite(value) ? value.toFixed(2) : "N/A";
+}
+
 export function Dashboard() {
+  const [metrics, setMetrics] = useState<ReturnsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .calculateReturns(SAMPLE_RETURNS)
+      .then(setMetrics)
+      .catch(() => {
+        setError("Unable to load portfolio analytics from the API.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const metricCards = metrics
+    ? [
+        {
+          label: "Cumulative Return",
+          value: formatPercent(metrics.total_return),
+          description: "Calculated by the quantitative backend",
+        },
+        {
+          label: "Annualized Return",
+          value: formatPercent(metrics.annualized_return),
+          description: "Annualized historical return",
+        },
+        {
+          label: "Volatility",
+          value: formatPercent(metrics.annualized_volatility),
+          description: "Annualized portfolio volatility",
+        },
+        {
+          label: "Sharpe Ratio",
+          value: formatRatio(metrics.sharpe_ratio),
+          description: "Risk-adjusted return",
+        },
+      ]
+    : [];
+
   return (
     <section>
       <div className="page-heading">
@@ -36,85 +76,78 @@ export function Dashboard() {
             signals from one workspace.
           </p>
         </div>
+
         <button className="primary-button" type="button">
           Build Portfolio
         </button>
       </div>
 
-      <div className="metric-grid">
-        {metrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="panel performance-panel">
-          <div className="panel-header">
-            <div>
-              <h3>Portfolio Performance</h3>
-              <p>Simulated cumulative portfolio value</p>
-            </div>
-            <select defaultValue="1Y" aria-label="Performance period">
-              <option>1M</option>
-              <option>3M</option>
-              <option>6M</option>
-              <option>1Y</option>
-            </select>
-          </div>
-
-          <div className="chart-placeholder">
-            <div className="chart-line" />
-            <span>Performance chart</span>
-          </div>
+      {loading && (
+        <div className="panel state-panel">
+          <strong>Loading quantitative analytics...</strong>
+          <span>Requesting metrics from the FastAPI backend.</span>
         </div>
+      )}
 
-        <div className="panel">
-          <div className="panel-header">
-            <div>
-              <h3>Portfolio Allocation</h3>
-              <p>Current target weights</p>
-            </div>
-          </div>
+      {error && (
+        <div className="panel state-panel error-panel">
+          <strong>Analytics unavailable</strong>
+          <span>{error}</span>
+        </div>
+      )}
 
-          <div className="allocation-list">
-            {[
-              ["Equities", "55%"],
-              ["Fixed Income", "25%"],
-              ["Alternatives", "12%"],
-              ["Cash", "8%"],
-            ].map(([name, weight]) => (
-              <div className="allocation-row" key={name}>
-                <span>{name}</span>
-                <strong>{weight}</strong>
-              </div>
+      {!loading && !error && metrics && (
+        <>
+          <div className="metric-grid">
+            {metricCards.map((metric) => (
+              <MetricCard key={metric.label} {...metric} />
             ))}
           </div>
-        </div>
-      </div>
 
-      <div className="panel recent-panel">
-        <div className="panel-header">
-          <div>
-            <h3>Research & Analytics</h3>
-            <p>Available quantitative modules</p>
-          </div>
-        </div>
+          <div className="dashboard-grid">
+            <div className="panel performance-panel">
+              <div className="panel-header">
+                <div>
+                  <h3>Quantitative Performance</h3>
+                  <p>Metrics returned directly from the FastAPI analytics engine</p>
+                </div>
+              </div>
 
-        <div className="module-grid">
-          <div className="module-card">
-            <strong>Classical Optimization</strong>
-            <span>Minimum volatility, maximum Sharpe and risk parity.</span>
+              <div className="analytics-table">
+                <div>
+                  <span>Downside Volatility</span>
+                  <strong>{formatPercent(metrics.downside_volatility)}</strong>
+                </div>
+                <div>
+                  <span>Sortino Ratio</span>
+                  <strong>{formatRatio(metrics.sortino_ratio)}</strong>
+                </div>
+                <div>
+                  <span>Maximum Drawdown</span>
+                  <strong>{formatPercent(metrics.maximum_drawdown)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-header">
+                <div>
+                  <h3>Backend Status</h3>
+                  <p>Live application architecture</p>
+                </div>
+              </div>
+
+              <div className="backend-status">
+                <div className="status-check">✓</div>
+                <div>
+                  <strong>Quant API operational</strong>
+                  <span>Frontend → FastAPI → Analytics Engine</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="module-card">
-            <strong>Risk Engine</strong>
-            <span>VaR, expected shortfall, drawdown and contribution risk.</span>
-          </div>
-          <div className="module-card">
-            <strong>Backtesting</strong>
-            <span>Historical portfolio simulation with transaction costs.</span>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </section>
   );
 }
