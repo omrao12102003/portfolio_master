@@ -1,5 +1,13 @@
-"""Classical portfolio optimization.
+from .classical import (
+    equal_weight,
+    maximum_sharpe,
+    minimum_volatility,
+    risk_parity,
+)
 
-This package is a Stage 1 boundary stub. Optimization solvers are implemented in a later stage.
-Deterministic optimization must never be replaced by LLM-generated weights.
-"""
+__all__ = [
+    "equal_weight",
+    "maximum_sharpe",
+    "minimum_volatility",
+    "risk_parity",
+]
