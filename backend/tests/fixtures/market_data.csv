@@ -1,0 +1,4 @@
+symbol,timestamp,open,high,low,close,adjusted_close,volume,source
+AAPL,2024-01-03,102,106,101,104,103.5,1200,test_csv
+AAPL,2024-01-02,100,105,99,103,102.5,1000,test_csv
+MSFT,2024-01-02,300,305,298,303,302.5,2000,test_csv
