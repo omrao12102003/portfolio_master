@@ -330,11 +330,13 @@ def portfolio_data(request: PortfolioDataRequest) -> dict:
 
         expected = mean_returns(returns)
         covariance = covariance_matrix(returns)
+        portfolio_returns = returns.mean(axis=1)
 
         return {
             "assets": list(request.assets),
             "expected_returns": expected.tolist(),
             "covariance": covariance.to_numpy().tolist(),
+            "portfolio_returns": portfolio_returns.tolist(),
             "start_date": request.start_date,
             "end_date": request.end_date,
             "observations": len(returns),

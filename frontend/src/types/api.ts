@@ -48,7 +48,9 @@ export interface PortfolioDataResponse {
   assets: string[];
   expected_returns: number[];
   covariance: number[][];
+  portfolio_returns: number[];
   start_date: string;
   end_date: string;
+  observations: number;
   source: string;
 }
