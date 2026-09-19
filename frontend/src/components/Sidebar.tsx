@@ -9,6 +9,7 @@ const navigation = [
   { label: "Optimization", path: "/optimization" },
   { label: "Risk", path: "/risk" },
   { label: "Backtesting", path: "/backtesting" },
+    { label: "RL Portfolio", path: "/rl" },
   { label: "Research", path: "/research" },
 ];
 

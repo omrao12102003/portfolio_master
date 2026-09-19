@@ -70,3 +70,21 @@ export const api = {
     }),
 };
 
+
+import type { RLRequest, RLResponse } from "../types/rl";
+
+export async function evaluateRL(request: RLRequest): Promise<RLResponse> {
+  const response = await fetch(`${API_BASE_URL}/rl/evaluate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    throw new Error(`RL evaluation failed: ${response.status}`);
+  }
+
+  return response.json();
+}
