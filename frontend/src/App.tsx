@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
+import { OptimizationPanel } from "./components/OptimizationPanel";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import "./styles.css";
 
@@ -21,12 +22,7 @@ export default function App() {
           />
           <Route
             path="/optimization"
-            element={
-              <PlaceholderPage
-                title="Portfolio Optimization"
-                description="Run classical optimization strategies and compare portfolio characteristics."
-              />
-            }
+            element={<OptimizationPanel />}
           />
           <Route
             path="/risk"

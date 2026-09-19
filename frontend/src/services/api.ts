@@ -1,4 +1,4 @@
-import type { HealthResponse, ReturnsResponse } from "../types/api";
+import type { HealthResponse, OptimizationResponse, PortfolioRequest, ReturnsResponse } from "../types/api";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -26,5 +26,11 @@ export const api = {
     request<ReturnsResponse>("/quant/returns", {
       method: "POST",
       body: JSON.stringify({ returns }),
+    }),
+
+  optimizePortfolio: (portfolio: PortfolioRequest) =>
+    request<OptimizationResponse>("/quant/optimize", {
+      method: "POST",
+      body: JSON.stringify(portfolio),
     }),
 };
