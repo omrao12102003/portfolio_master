@@ -1,4 +1,5 @@
 import type { RiskRequest, RiskResponse } from "../types/risk";
+import type { FrontierPoint, FrontierRequest } from "../types/frontier";
 
 import type {
   HealthResponse,
@@ -45,6 +46,12 @@ export const api = {
 
   optimizePortfolio: (portfolio: PortfolioRequest) =>
     request<OptimizationResponse>("/quant/optimize", {
+      method: "POST",
+      body: JSON.stringify(portfolio),
+    }),
+
+  calculateFrontier: (portfolio: FrontierRequest) =>
+    request<FrontierPoint[]>("/quant/frontier", {
       method: "POST",
       body: JSON.stringify(portfolio),
     }),

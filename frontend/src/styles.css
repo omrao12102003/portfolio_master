@@ -767,3 +767,117 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.frontier-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.frontier-overview .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.frontier-overview span,
+.frontier-highlights span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.frontier-overview strong {
+  font-size: 18px;
+}
+
+.frontier-panel {
+  margin-bottom: 16px;
+}
+
+.frontier-chart {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.frontier-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 620px;
+  height: auto;
+}
+
+.chart-axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.frontier-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.frontier-point {
+  fill: var(--accent);
+}
+
+.frontier-chart text {
+  fill: var(--text-muted);
+  font-size: 12px;
+}
+
+.frontier-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.frontier-highlights > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.frontier-method-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.frontier-method-row:last-child {
+  border-bottom: 0;
+}
+
+.frontier-method-row span {
+  text-align: right;
+}
+
+.frontier-table-header {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.loading-panel {
+  text-align: center;
+  padding: 40px;
+}
+
+@media (max-width: 800px) {
+  .frontier-overview,
+  .frontier-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .frontier-method-row {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 8px;
+  }
+}

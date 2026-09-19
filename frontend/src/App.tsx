@@ -3,6 +3,7 @@ import { AppLayout } from "./layouts/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { OptimizationPanel } from "./components/OptimizationPanel";
 import { RiskDashboard } from "./components/RiskDashboard";
+import { FrontierDashboard } from "./components/FrontierDashboard";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import "./styles.css";
 
@@ -28,6 +29,10 @@ export default function App() {
           <Route
             path="/risk"
             element={<RiskDashboard />}
+          />
+          <Route
+            path="/frontier"
+            element={<FrontierDashboard />}
           />
           <Route
             path="/backtesting"
