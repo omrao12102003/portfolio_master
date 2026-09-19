@@ -881,3 +881,98 @@ button {
     gap: 8px;
   }
 }
+
+.backtest-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.backtest-inputs {
+  display: grid;
+  gap: 14px;
+}
+
+.backtest-inputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backtest-inputs input,
+.backtest-inputs select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.backtest-dataset {
+  display: grid;
+  gap: 16px;
+}
+
+.backtest-dataset div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.backtest-dataset span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.backtest-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.backtest-metrics .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backtest-metrics span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.backtest-metrics strong {
+  font-size: 18px;
+}
+
+.backtest-panel {
+  margin-bottom: 16px;
+}
+
+.backtest-chart {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.backtest-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 620px;
+  height: auto;
+}
+
+.backtest-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.backtest-chart text {
+  fill: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .backtest-layout,
+  .backtest-metrics {
+    grid-template-columns: 1fr;
+  }
+}

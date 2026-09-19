@@ -61,6 +61,7 @@ class BacktestRequest(BaseModel):
     weights: list[float] = Field(min_length=2)
     initial_capital: float = Field(default=100_000.0, gt=0)
     transaction_cost_bps: float = Field(default=5.0, ge=0)
+    rebalance_frequency: str = "daily"
 
 
 def _portfolio_inputs(request: PortfolioRequest):
@@ -208,7 +209,7 @@ def calculate_backtest(request: BacktestRequest) -> dict:
 
     prices = pd.DataFrame(
         request.prices,
-        index=pd.to_datetime(request.dates),
+        index=pd.to_datetime(request.dates, utc=True),
         columns=request.assets,
         dtype=float,
     )
@@ -219,12 +220,19 @@ def calculate_backtest(request: BacktestRequest) -> dict:
         dtype=float,
     )
 
-    result = run_backtest(
-        prices,
-        weights,
-        initial_capital=request.initial_capital,
-        transaction_cost_bps=request.transaction_cost_bps,
-    )
+    try:
+        result = run_backtest(
+            prices,
+            weights,
+            initial_capital=request.initial_capital,
+            transaction_cost_bps=request.transaction_cost_bps,
+            rebalance_frequency=request.rebalance_frequency,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
 
     return {
         "summary": backtest_summary(result),
@@ -337,6 +345,11 @@ def portfolio_data(request: PortfolioDataRequest) -> dict:
             "expected_returns": expected.tolist(),
             "covariance": covariance.to_numpy().tolist(),
             "portfolio_returns": portfolio_returns.tolist(),
+            "historical_dates": [
+                timestamp.isoformat()
+                for timestamp in prices.index
+            ],
+            "historical_prices": prices.to_numpy().tolist(),
             "start_date": request.start_date,
             "end_date": request.end_date,
             "observations": len(returns),

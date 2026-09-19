@@ -1,5 +1,6 @@
 import type { RiskRequest, RiskResponse } from "../types/risk";
 import type { FrontierPoint, FrontierRequest } from "../types/frontier";
+import type { BacktestRequest, BacktestResponse } from "../types/backtest";
 
 import type {
   HealthResponse,
@@ -54,6 +55,12 @@ export const api = {
     request<FrontierPoint[]>("/quant/frontier", {
       method: "POST",
       body: JSON.stringify(portfolio),
+    }),
+
+  runBacktest: (backtest: BacktestRequest) =>
+    request<BacktestResponse>("/quant/backtest", {
+      method: "POST",
+      body: JSON.stringify(backtest),
     }),
 
   getPortfolioData: (portfolio: PortfolioDataRequest) =>

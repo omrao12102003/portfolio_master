@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { OptimizationPanel } from "./components/OptimizationPanel";
 import { RiskDashboard } from "./components/RiskDashboard";
 import { FrontierDashboard } from "./components/FrontierDashboard";
+import { BacktestDashboard } from "./components/BacktestDashboard";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import "./styles.css";
 
@@ -36,12 +37,7 @@ export default function App() {
           />
           <Route
             path="/backtesting"
-            element={
-              <PlaceholderPage
-                title="Backtesting"
-                description="Evaluate historical portfolio strategies with rebalancing and transaction costs."
-              />
-            }
+            element={<BacktestDashboard />}
           />
           <Route
             path="/research"

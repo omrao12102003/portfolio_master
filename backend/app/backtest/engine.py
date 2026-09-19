@@ -89,7 +89,7 @@ def run_backtest(
     weight_rows: list[pd.Series] = []
 
     equity = initial_capital
-    equity_values = [equity]
+    equity_values: list[float] = []
 
     for i, date in enumerate(prices.index):
         if i == 0:
@@ -124,13 +124,12 @@ def run_backtest(
             )
 
         equity *= 1.0 + portfolio_return
+        equity_values.append(equity)
 
         portfolio_returns.append(portfolio_return)
         turnover_values.append(turnover)
         cost_values.append(cost)
         weight_rows.append(current_weights.copy())
-        if i > 0:
-            equity_values.append(equity)
 
     equity_curve = pd.Series(
         equity_values,
