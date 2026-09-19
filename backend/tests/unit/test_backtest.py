@@ -17,7 +17,7 @@ def prices():
             "A": [100.0, 102.0, 101.0, 104.0, 106.0],
             "B": [100.0, 101.0, 103.0, 102.0, 105.0],
         },
-        index=pd.date_range("2026-01-01", periods=5, freq="D"),
+        index=pd.date_range("2026-01-05", periods=5, freq="B"),
     )
 
 
