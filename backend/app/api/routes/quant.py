@@ -39,6 +39,12 @@ class PortfolioRequest(BaseModel):
     covariance: list[list[float]] = Field(min_length=2)
 
 
+class PortfolioDataRequest(BaseModel):
+    assets: list[str]
+    start_date: str
+    end_date: str
+
+
 class BacktestRequest(BaseModel):
     dates: list[str] = Field(min_length=2)
     assets: list[str] = Field(min_length=2)
@@ -212,3 +218,103 @@ def calculate_concentration(
     )
 
     return {"herfindahl_index": concentration(weights)}
+
+
+@router.post("/portfolio-data")
+def portfolio_data(request: PortfolioDataRequest) -> dict:
+    """Build optimization inputs from validated historical market data."""
+    from datetime import date
+
+    from app.analytics.portfolio import covariance_matrix, mean_returns
+    from app.data.ingestion import MarketDataIngestionService
+    from app.data.providers.yahoo import YahooFinanceProvider
+
+    if len(request.assets) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least two assets are required.",
+        )
+
+    if len(set(request.assets)) != len(request.assets):
+        raise HTTPException(
+            status_code=400,
+            detail="Asset names must be unique.",
+        )
+
+    try:
+        start_date = date.fromisoformat(request.start_date)
+        end_date = date.fromisoformat(request.end_date)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Dates must use YYYY-MM-DD format.",
+        ) from exc
+
+    if start_date >= end_date:
+        raise HTTPException(
+            status_code=400,
+            detail="start_date must be before end_date.",
+        )
+
+    try:
+        service = MarketDataIngestionService(YahooFinanceProvider())
+
+        frames: dict[str, pd.Series] = {}
+
+        for asset in request.assets:
+            result = service.ingest(
+                symbol=asset,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
+            frame = result.data.sort_values("timestamp")
+
+            if len(frame) < 2:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient historical data for {asset}.",
+                )
+
+            frames[asset] = (
+                frame.set_index("timestamp")["adjusted_close"]
+                .astype(float)
+                .sort_index()
+            )
+
+        prices = pd.concat(frames, axis=1).dropna()
+
+        if len(prices) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Insufficient overlapping historical data across assets.",
+            )
+
+        returns = prices.pct_change().dropna()
+
+        if returns.empty:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to calculate historical returns.",
+            )
+
+        expected = mean_returns(returns)
+        covariance = covariance_matrix(returns)
+
+        return {
+            "assets": list(request.assets),
+            "expected_returns": expected.tolist(),
+            "covariance": covariance.to_numpy().tolist(),
+            "start_date": request.start_date,
+            "end_date": request.end_date,
+            "observations": len(returns),
+            "source": "yahoo_finance",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Market data retrieval failed: {exc}",
+        ) from exc

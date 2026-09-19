@@ -36,3 +36,19 @@ export interface OptimizationResponse {
   maximum_sharpe: OptimizationResult;
   risk_parity: OptimizationResult;
 }
+
+
+export interface PortfolioDataRequest {
+  assets: string[];
+  start_date: string;
+  end_date: string;
+}
+
+export interface PortfolioDataResponse {
+  assets: string[];
+  expected_returns: number[];
+  covariance: number[][];
+  start_date: string;
+  end_date: string;
+  source: string;
+}

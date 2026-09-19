@@ -9,12 +9,6 @@ const DEFAULT_ASSETS = ["SPY", "QQQ", "TLT"];
 
 const DEFAULT_EXPECTED_RETURNS = [0.08, 0.12, 0.05];
 
-const DEFAULT_COVARIANCE = [
-  [0.04, 0.012, 0.006],
-  [0.012, 0.09, 0.004],
-  [0.006, 0.004, 0.025],
-];
-
 function formatPercent(value: number) {
   return `${(value * 100).toFixed(2)}%`;
 }
@@ -67,7 +61,7 @@ function ResultCard({
 
 export function OptimizationPanel() {
   const [assets, setAssets] = useState(DEFAULT_ASSETS);
-  const [expectedReturns, setExpectedReturns] = useState(
+  const [expectedReturns, setExpectedReturns] = useState<number[]>(
     DEFAULT_EXPECTED_RETURNS,
   );
   const [minWeight, setMinWeight] = useState(0);
@@ -94,22 +88,32 @@ export function OptimizationPanel() {
     setLoading(true);
     setError(null);
 
-    const payload: PortfolioRequest = {
-      assets,
-      expected_returns: expectedReturns,
-      covariance: DEFAULT_COVARIANCE,
-      risk_free_rate: 0.02,
-      min_weight: minWeight,
-      max_weight: maxWeight,
-    };
-
     try {
+      const portfolioData = await api.getPortfolioData({
+        assets,
+        start_date: "2024-01-01",
+        end_date: "2024-12-31",
+      });
+
+      setExpectedReturns(portfolioData.expected_returns);
+
+      const payload: PortfolioRequest = {
+        assets: portfolioData.assets,
+        expected_returns: portfolioData.expected_returns,
+        covariance: portfolioData.covariance,
+        risk_free_rate: 0.02,
+        min_weight: minWeight,
+        max_weight: maxWeight,
+      };
+
       const response = await api.optimizePortfolio(payload);
       setResults(response);
-    } catch {
+    } catch (err) {
       setResults(null);
       setError(
-        "Optimization failed. Check the portfolio inputs and confirm the API is running.",
+        err instanceof Error
+          ? err.message
+          : "Optimization failed. Check the market data API.",
       );
     } finally {
       setLoading(false);

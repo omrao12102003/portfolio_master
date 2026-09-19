@@ -163,3 +163,86 @@ def test_invalid_backtest_dimensions():
     response = client.post("/quant/backtest", json=payload)
 
     assert response.status_code == 422
+
+
+
+
+
+def test_portfolio_data_endpoint(monkeypatch):
+    import pandas as pd
+
+    from app.data.ingestion import IngestionResult
+
+    def mock_ingest(self, symbol, start_date, end_date):
+        prices = {
+            "A": [100.0, 102.0, 101.0, 104.0],
+            "B": [200.0, 201.0, 204.0, 206.0],
+        }[symbol]
+
+        frame = pd.DataFrame(
+            {
+                "symbol": [symbol] * len(prices),
+                "timestamp": pd.to_datetime(
+                    [
+                        "2024-01-02",
+                        "2024-01-03",
+                        "2024-01-04",
+                        "2024-01-05",
+                    ]
+                ),
+                "adjusted_close": prices,
+            }
+        )
+
+        return IngestionResult(data=frame, quality_report=None)
+
+    monkeypatch.setattr(
+        "app.data.ingestion.MarketDataIngestionService.ingest",
+        mock_ingest,
+    )
+
+    response = client.post(
+        "/quant/portfolio-data",
+        json={
+            "assets": ["A", "B"],
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["assets"] == ["A", "B"]
+    assert body["source"] == "yahoo_finance"
+    assert body["observations"] == 3
+    assert len(body["expected_returns"]) == 2
+    assert len(body["covariance"]) == 2
+    assert len(body["covariance"][0]) == 2
+
+
+def test_portfolio_data_invalid_dates():
+    response = client.post(
+        "/quant/portfolio-data",
+        json={
+            "assets": ["A", "B"],
+            "start_date": "2024-02-01",
+            "end_date": "2024-01-01",
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_portfolio_data_duplicate_assets():
+    response = client.post(
+        "/quant/portfolio-data",
+        json={
+            "assets": ["A", "A"],
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+        },
+    )
+
+    assert response.status_code == 400

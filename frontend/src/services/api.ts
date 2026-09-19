@@ -1,4 +1,11 @@
-import type { HealthResponse, OptimizationResponse, PortfolioRequest, ReturnsResponse } from "../types/api";
+import type {
+  HealthResponse,
+  OptimizationResponse,
+  PortfolioDataRequest,
+  PortfolioDataResponse,
+  PortfolioRequest,
+  ReturnsResponse,
+} from "../types/api";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -33,4 +40,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(portfolio),
     }),
+
+  getPortfolioData: (portfolio: PortfolioDataRequest) =>
+    request<PortfolioDataResponse>("/quant/portfolio-data", {
+      method: "POST",
+      body: JSON.stringify(portfolio),
+    }),
 };
+
