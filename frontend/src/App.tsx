@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { OptimizationPanel } from "./components/OptimizationPanel";
+import { RiskDashboard } from "./components/RiskDashboard";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import "./styles.css";
 
@@ -26,12 +27,7 @@ export default function App() {
           />
           <Route
             path="/risk"
-            element={
-              <PlaceholderPage
-                title="Risk Analytics"
-                description="Analyze volatility, drawdown, VaR, expected shortfall and portfolio risk contribution."
-              />
-            }
+            element={<RiskDashboard />}
           />
           <Route
             path="/backtesting"

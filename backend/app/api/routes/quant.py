@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.analytics.returns import (
     annualized_volatility,
     cumulative_returns,
+    downside_volatility,
     maximum_drawdown,
     sharpe_ratio,
     sortino_ratio,
@@ -20,10 +21,12 @@ from app.optimization.classical import (
 )
 from app.optimization.frontier import efficient_frontier
 from app.risk.metrics import (
+    beta,
     concentration,
     expected_shortfall,
     historical_var,
     parametric_var,
+    tracking_error,
 )
 
 router = APIRouter(prefix="/quant", tags=["quant"])
@@ -31,6 +34,12 @@ router = APIRouter(prefix="/quant", tags=["quant"])
 
 class ReturnsRequest(BaseModel):
     returns: list[float] = Field(min_length=2)
+
+
+class RiskRequest(BaseModel):
+    returns: list[float] = Field(min_length=2)
+    benchmark_returns: list[float] | None = None
+    risk_free_rate: float = 0.0
 
 
 class PortfolioRequest(BaseModel):
@@ -103,14 +112,35 @@ def calculate_returns(request: ReturnsRequest) -> dict[str, float]:
 
 
 @router.post("/risk")
-def calculate_risk(request: ReturnsRequest) -> dict[str, float]:
+def calculate_risk(request: RiskRequest) -> dict[str, float]:
     series = pd.Series(request.returns, dtype=float)
 
-    return {
-        "historical_var_95": historical_var(series, 0.95),
-        "parametric_var_95": parametric_var(series, 0.95),
-        "expected_shortfall_95": expected_shortfall(series, 0.95),
+    result = {
+        "volatility": float(annualized_volatility(series)),
+        "downside_volatility": float(downside_volatility(series)),
+        "sharpe_ratio": float(
+            sharpe_ratio(series, risk_free_rate=request.risk_free_rate)
+        ),
+        "sortino_ratio": float(
+            sortino_ratio(series, risk_free_rate=request.risk_free_rate)
+        ),
+        "maximum_drawdown": float(maximum_drawdown(series)),
+        "historical_var_95": float(historical_var(series, 0.95)),
+        "parametric_var_95": float(parametric_var(series, 0.95)),
+        "expected_shortfall_95": float(expected_shortfall(series, 0.95)),
     }
+
+    if request.benchmark_returns is not None:
+        benchmark = pd.Series(request.benchmark_returns, dtype=float)
+        if len(benchmark) != len(series):
+            raise HTTPException(
+                status_code=400,
+                detail="Benchmark returns must match portfolio observations",
+            )
+        result["beta"] = float(beta(series, benchmark))
+        result["tracking_error"] = float(tracking_error(series, benchmark))
+
+    return result
 
 
 @router.post("/optimize")

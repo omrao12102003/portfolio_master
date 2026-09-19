@@ -1,3 +1,5 @@
+import type { RiskRequest, RiskResponse } from "../types/risk";
+
 import type {
   HealthResponse,
   OptimizationResponse,
@@ -33,6 +35,12 @@ export const api = {
     request<ReturnsResponse>("/quant/returns", {
       method: "POST",
       body: JSON.stringify({ returns }),
+    }),
+
+  calculateRisk: (riskRequest: RiskRequest) =>
+    request<RiskResponse>("/quant/risk", {
+      method: "POST",
+      body: JSON.stringify(riskRequest),
     }),
 
   optimizePortfolio: (portfolio: PortfolioRequest) =>
