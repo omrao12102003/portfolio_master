@@ -2,9 +2,13 @@
 __pycache__/
 *.py[cod]
 *.so
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 
 # Virtual environments
@@ -49,3 +53,6 @@ data/processed/*
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Local Docker bind mounts (named volumes are outside the repo)
+docker/data/
