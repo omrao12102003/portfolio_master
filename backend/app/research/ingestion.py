@@ -6,7 +6,7 @@ from app.research.retrieval import ResearchDocument
 
 
 class ResearchDocumentLoader:
-    supported_extensions = {".txt", ".md", ".pdf"}
+    supported_extensions = {".txt", ".md", ".html", ".htm", ".pdf"}
 
     def load(
         self,
@@ -26,8 +26,12 @@ class ResearchDocumentLoader:
         if not file_path.exists():
             raise FileNotFoundError(f"Document not found: {file_path}")
 
-        if file_path.suffix.lower() == ".pdf":
+        suffix = file_path.suffix.lower()
+
+        if suffix == ".pdf":
             content = self._read_pdf(file_path)
+        elif suffix in {".html", ".htm"}:
+            content = self._read_html(file_path)
         else:
             content = file_path.read_text(encoding="utf-8").strip()
 
@@ -50,6 +54,24 @@ class ResearchDocumentLoader:
             content=content,
             published_date=published_date,
         )
+
+    @staticmethod
+    def _read_html(file_path: Path) -> str:
+        try:
+            from bs4 import BeautifulSoup
+        except ImportError as exc:
+            raise RuntimeError(
+                "The beautifulsoup4 package is not installed."
+            ) from exc
+
+        html = file_path.read_text(encoding="utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+
+        for element in soup(["script", "style", "noscript"]):
+            element.decompose()
+
+        return soup.get_text(" ", strip=True)
+
 
     @staticmethod
     def _read_pdf(file_path: Path) -> str:

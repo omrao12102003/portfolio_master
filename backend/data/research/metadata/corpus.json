@@ -1,0 +1,40 @@
+{
+  "documents": [
+    {
+      "document_id": "aapl-10k-2025",
+      "company": "Apple Inc.",
+      "ticker": "AAPL",
+      "document_type": "10-K",
+      "title": "Apple Inc. 2025 Form 10-K",
+      "source": "SEC EDGAR",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm",
+      "published_date": "2025-10-31",
+      "fiscal_period": "FY2025",
+      "path": "data/research/raw/sec/aapl-10k-2025.htm"
+    },
+    {
+      "document_id": "msft-10k-2025",
+      "company": "Microsoft Corporation",
+      "ticker": "MSFT",
+      "document_type": "10-K",
+      "title": "Microsoft Corporation 2025 Form 10-K",
+      "source": "SEC EDGAR",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000095017025100235/msft-20250630.htm",
+      "published_date": "2025-07-30",
+      "fiscal_period": "FY2025",
+      "path": "data/research/raw/sec/msft-10k-2025.htm"
+    },
+    {
+      "document_id": "nvda-10k-2025",
+      "company": "NVIDIA Corporation",
+      "ticker": "NVDA",
+      "document_type": "10-K",
+      "title": "NVIDIA Corporation 2025 Form 10-K",
+      "source": "SEC EDGAR",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.htm",
+      "published_date": "2025-02-26",
+      "fiscal_period": "FY2025",
+      "path": "data/research/raw/sec/nvda-10k-2025.htm"
+    }
+  ]
+}
