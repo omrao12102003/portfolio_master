@@ -70,7 +70,25 @@ class ResearchDocumentLoader:
         for element in soup(["script", "style", "noscript"]):
             element.decompose()
 
-        return soup.get_text(" ", strip=True)
+        block_tags = [
+            "br",
+            "p",
+            "div",
+            "li",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "table",
+            "tr",
+        ]
+
+        for element in soup.find_all(block_tags):
+            element.append("\n")
+
+        return soup.get_text("\n", strip=True)
 
 
     @staticmethod
