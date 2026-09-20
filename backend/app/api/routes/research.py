@@ -4,9 +4,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.research.database import get_database_url
+from app.research.embeddings import HashEmbeddingProvider
+from app.research.hybrid_retrieval import HybridResearchRetriever
 from app.research.retrieval import ResearchDocument, ResearchRetriever
+from app.research.semantic_retrieval import RetrievalFilters, SemanticResearchRetriever
 from app.research.service import ResearchService
 from app.research.store import ResearchDocumentStore
+from app.research.vector_store import ResearchVectorStore
 
 router = APIRouter(prefix="/research", tags=["research"])
 
@@ -37,6 +41,36 @@ class ResearchEvidenceResponse(BaseModel):
 class ResearchRetrievalResponse(BaseModel):
     query: str
     results: list[ResearchEvidenceResponse]
+
+
+class SemanticResearchRequest(BaseModel):
+    query: str = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=50)
+    company: str | None = None
+    ticker: str | None = None
+    document_type: str | None = None
+    published_before: str | None = None
+    section: str | None = None
+    method: str = Field(default="hybrid", pattern="^(semantic|hybrid)$")
+
+
+class SemanticResearchEvidenceResponse(BaseModel):
+    chunk_id: str
+    document_id: str
+    title: str
+    source: str
+    published_date: str | None
+    section: str
+    content: str
+    semantic_score: float
+    lexical_score: float
+    final_score: float
+
+
+class SemanticResearchResponse(BaseModel):
+    query: str
+    method: str
+    results: list[SemanticResearchEvidenceResponse]
 
 
 class ResearchAnswerRequest(BaseModel):
@@ -226,4 +260,83 @@ def answer_research(
         answer=result.answer,
         model=result.model,
         sources=result.sources,
+    )
+
+
+@router.post(
+    "/retrieve-semantic",
+    response_model=SemanticResearchResponse,
+)
+def retrieve_semantic_research(
+    request: SemanticResearchRequest,
+) -> SemanticResearchResponse:
+    try:
+        store = ResearchVectorStore(get_database_url(), 256)
+        store.initialize()
+
+        provider = HashEmbeddingProvider(dimension=256)
+        semantic = SemanticResearchRetriever(store, provider)
+        filters = RetrievalFilters(
+            company=request.company,
+            ticker=request.ticker,
+            document_type=request.document_type,
+            published_before=request.published_before,
+            section=request.section,
+        )
+
+        if request.method == "semantic":
+            semantic_results = semantic.retrieve(
+                request.query,
+                limit=request.top_k,
+                filters=filters,
+            )
+
+            results = [
+                SemanticResearchEvidenceResponse(
+                    chunk_id=result.chunk_id,
+                    document_id=result.document_id,
+                    title=result.title,
+                    source=result.source,
+                    published_date=result.published_date,
+                    section=result.section,
+                    content=result.content,
+                    semantic_score=result.similarity,
+                    lexical_score=0.0,
+                    final_score=result.similarity,
+                )
+                for result in semantic_results
+            ]
+        else:
+            hybrid = HybridResearchRetriever(semantic)
+            hybrid_results = hybrid.retrieve(
+                request.query,
+                limit=request.top_k,
+                filters=filters,
+            )
+
+            results = [
+                SemanticResearchEvidenceResponse(
+                    chunk_id=result.chunk_id,
+                    document_id=result.document_id,
+                    title=result.title,
+                    source=result.source,
+                    published_date=result.published_date,
+                    section=result.section,
+                    content=result.content,
+                    semantic_score=result.semantic_score,
+                    lexical_score=result.lexical_score,
+                    final_score=result.final_score,
+                )
+                for result in hybrid_results
+            ]
+
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return SemanticResearchResponse(
+        query=request.query,
+        method=request.method,
+        results=results,
     )
