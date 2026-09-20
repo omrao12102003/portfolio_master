@@ -14,7 +14,7 @@ DATABASE_URL = os.getenv(
 
 @pytest.fixture()
 def vector_store():
-    provider = HashEmbeddingProvider(dimension=32)
+    provider = HashEmbeddingProvider(dimension=256)
     store = ResearchVectorStore(DATABASE_URL, provider.dimension)
     store.initialize()
 
