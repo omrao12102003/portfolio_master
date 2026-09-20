@@ -8,6 +8,7 @@ from app.api.routes.grounded_reports import router as grounded_reports_router
 from app.api.routes.health import router as health_router
 from app.api.routes.investment_workflow import router as investment_workflow_router
 from app.api.routes.quant import router as quant_router
+from app.api.routes.readiness import router as readiness_router
 from app.api.routes.reporting import router as reporting_router
 from app.api.routes.research import router as research_router
 from app.api.routes.rl import router as rl_router
@@ -15,6 +16,7 @@ from app.api.routes.trading import router as trading_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, prefix="/api")
+api_router.include_router(readiness_router)
 api_router.include_router(quant_router)
 api_router.include_router(advanced_risk_router)
 api_router.include_router(factor_time_series_router)

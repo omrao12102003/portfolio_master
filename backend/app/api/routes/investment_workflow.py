@@ -19,17 +19,17 @@ class WorkflowMetricRequest(BaseModel):
 
 
 class InvestmentWorkflowRequest(BaseModel):
-    title: str
-    question: str
-    summary: str
+    title: str = Field(..., min_length=1, max_length=200)
+    question: str = Field(..., min_length=1, max_length=2000)
+    summary: str = Field(..., min_length=1, max_length=5000)
     metrics: list[WorkflowMetricRequest]
     ticker: str | None = None
     company: str | None = None
     published_before: str | None = None
     section: str | None = None
-    findings: list[str] = Field(default_factory=list)
-    methodology: list[str] = Field(default_factory=list)
-    limitations: list[str] = Field(default_factory=list)
+    findings: list[str] = Field(default_factory=list, max_length=20)
+    methodology: list[str] = Field(default_factory=list, max_length=20)
+    limitations: list[str] = Field(default_factory=list, max_length=20)
     top_k: int = Field(default=5, ge=1, le=20)
 
 
