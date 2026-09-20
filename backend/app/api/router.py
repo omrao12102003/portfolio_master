@@ -4,8 +4,10 @@ from app.api.routes.advanced_risk import router as advanced_risk_router
 from app.api.routes.derivatives import router as derivatives_router
 from app.api.routes.factor_time_series import router as factor_time_series_router
 from app.api.routes.fixed_income import router as fixed_income_router
+from app.api.routes.grounded_reports import router as grounded_reports_router
 from app.api.routes.health import router as health_router
 from app.api.routes.quant import router as quant_router
+from app.api.routes.reporting import router as reporting_router
 from app.api.routes.research import router as research_router
 from app.api.routes.rl import router as rl_router
 from app.api.routes.trading import router as trading_router
@@ -20,3 +22,6 @@ api_router.include_router(rl_router)
 api_router.include_router(derivatives_router)
 api_router.include_router(fixed_income_router)
 api_router.include_router(trading_router)
+
+api_router.include_router(reporting_router)
+api_router.include_router(grounded_reports_router)
