@@ -42,10 +42,10 @@ class InvestmentResearchWorkflow:
             section=section,
         )
 
-        results = self.retriever.search(
+        results = self.retriever.retrieve(
             question,
+            limit=top_k,
             filters=filters,
-            top_k=top_k,
         )
 
         evidence = [

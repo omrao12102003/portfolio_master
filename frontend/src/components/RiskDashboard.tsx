@@ -26,10 +26,10 @@ export function RiskDashboard() {
 
         const portfolioReturns = portfolio.portfolio_returns;
 
-        const result = await api.calculateRisk({
-          returns: portfolioReturns,
-          risk_free_rate: 0.02,
-        });
+        const result = await api.calculateRisk(
+          portfolioReturns,
+          0.02,
+        );
 
         setRisk(result);
         setObservations(portfolio.observations);

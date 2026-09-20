@@ -1,90 +1,238 @@
-import type { RiskRequest, RiskResponse } from "../types/risk";
-import type { FrontierPoint, FrontierRequest } from "../types/frontier";
-import type { BacktestRequest, BacktestResponse } from "../types/backtest";
-
 import type {
+  BacktestResponse,
+  GroundedReportResponse,
   HealthResponse,
   OptimizationResponse,
-  PortfolioDataRequest,
-  PortfolioDataResponse,
   PortfolioRequest,
   ReturnsResponse,
-} from "../types/api";
+  RiskResponse,
+} from "../types/api"
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+).replace(/\/$/, "")
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+async function request<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...(options?.headers ?? {}),
     },
     ...options,
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    const detail = await response.text()
+    throw new Error(detail || `Request failed: ${response.status}`)
   }
 
-  return response.json() as Promise<T>;
+  return response.json() as Promise<T>
+}
+
+export function getHealth(): Promise<HealthResponse> {
+  return request<HealthResponse>("/api/health")
+}
+
+export function getReadiness(): Promise<{
+  status: string
+  environment: string
+  database_configured: boolean
+  cors_configured: boolean
+}> {
+  return request("/api/readiness")
+}
+
+export function calculateReturns(
+  returns: number[],
+  riskFreeRate = 0.02,
+): Promise<ReturnsResponse> {
+  return request("/quant/returns", {
+    method: "POST",
+    body: JSON.stringify({
+      returns,
+      risk_free_rate: riskFreeRate,
+    }),
+  })
+}
+
+export function optimizePortfolio(
+  payload: PortfolioRequest,
+): Promise<OptimizationResponse> {
+  return request("/quant/optimize", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export function calculateRisk(
+  returns: number[],
+  riskFreeRate = 0.02,
+): Promise<RiskResponse> {
+  return request("/quant/risk", {
+    method: "POST",
+    body: JSON.stringify({
+      returns,
+      risk_free_rate: riskFreeRate,
+    }),
+  })
+}
+
+export function runBacktest(payload: {
+  prices: number[][]
+  target_weights: number[]
+  initial_capital: number
+  transaction_cost_bps: number
+  rebalance_frequency: string
+}): Promise<BacktestResponse> {
+  return request("/quant/backtest", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export function createGroundedReport(payload: {
+  title: string
+  question: string
+  summary: string
+  metrics: {
+    name: string
+    value: number
+    unit?: string
+  }[]
+  evidence: {
+    title: string
+    source: string
+    content: string
+    relevance: number
+  }[]
+  methodology?: string[]
+  limitations?: string[]
+}): Promise<GroundedReportResponse> {
+  return request("/research/reports/grounded", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getPortfolioData(payload: {
+  assets: string[]
+  start_date: string
+  end_date: string
+}): Promise<{
+  assets: string[]
+  start_date: string
+  end_date: string
+  observations: number
+  dates: string[]
+  historical_dates: string[]
+  historical_prices: number[][]
+  expected_returns: number[]
+  covariance: number[][]
+  returns: number[][]
+  portfolio_returns: number[]
+}> {
+  return request("/quant/portfolio-data", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function calculateFrontier(
+  payload: PortfolioRequest,
+): Promise<{
+  target_return: number
+  expected_return: number
+  volatility: number
+  sharpe_ratio: number
+  weights: number[]
+}[]> {
+  const response = await request<{
+    points: {
+      expected_return: number
+      volatility: number
+      sharpe_ratio: number
+      weights: number[]
+    }[]
+  }>("/quant/frontier", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+
+  return response.points.map((point) => ({
+    ...point,
+    target_return: point.expected_return,
+  }))
+}
+
+export async function evaluateRL(payload: {
+  returns: number[][]
+  assets: string[]
+  actions: number[][]
+  initial_capital: number
+  transaction_cost_bps: number
+  risk_free_rate: number
+}): Promise<import("../types/rl").RLResponse> {
+  return request("/rl/evaluate", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createInvestmentReport(payload: {
+  title: string
+  question: string
+  summary: string
+  metrics: {
+    name: string
+    value: number
+    unit?: string
+  }[]
+  ticker?: string
+  company?: string
+  published_before?: string
+  section?: string
+  findings?: string[]
+  methodology?: string[]
+  limitations?: string[]
+  top_k?: number
+}): Promise<GroundedReportResponse & {
+  workflow?: {
+    evidence_count: number
+    sources: string[]
+  }
+}> {
+  return request("/research/workflow/report", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
 }
 
 export const api = {
-  health: () => request<HealthResponse>("/api/health"),
-
-  calculateReturns: (returns: number[]) =>
-    request<ReturnsResponse>("/quant/returns", {
+  health: getHealth,
+  getHealth,
+  getReadiness,
+  getPortfolioData,
+  calculateReturns,
+  optimizePortfolio,
+  calculateRisk,
+  calculateFrontier,
+  runBacktest: async (payload: {
+    assets: string[]
+    dates: string[]
+    prices: number[][]
+    weights: number[]
+    initial_capital: number
+    transaction_cost_bps: number
+    rebalance_frequency: string
+  }): Promise<import("../types/backtest").BacktestResponse> => {
+    return request("/quant/backtest", {
       method: "POST",
-      body: JSON.stringify({ returns }),
-    }),
-
-  calculateRisk: (riskRequest: RiskRequest) =>
-    request<RiskResponse>("/quant/risk", {
-      method: "POST",
-      body: JSON.stringify(riskRequest),
-    }),
-
-  optimizePortfolio: (portfolio: PortfolioRequest) =>
-    request<OptimizationResponse>("/quant/optimize", {
-      method: "POST",
-      body: JSON.stringify(portfolio),
-    }),
-
-  calculateFrontier: (portfolio: FrontierRequest) =>
-    request<FrontierPoint[]>("/quant/frontier", {
-      method: "POST",
-      body: JSON.stringify(portfolio),
-    }),
-
-  runBacktest: (backtest: BacktestRequest) =>
-    request<BacktestResponse>("/quant/backtest", {
-      method: "POST",
-      body: JSON.stringify(backtest),
-    }),
-
-  getPortfolioData: (portfolio: PortfolioDataRequest) =>
-    request<PortfolioDataResponse>("/quant/portfolio-data", {
-      method: "POST",
-      body: JSON.stringify(portfolio),
-    }),
-};
-
-
-import type { RLRequest, RLResponse } from "../types/rl";
-
-export async function evaluateRL(request: RLRequest): Promise<RLResponse> {
-  const response = await fetch(`${API_BASE_URL}/rl/evaluate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    throw new Error(`RL evaluation failed: ${response.status}`);
-  }
-
-  return response.json();
+      body: JSON.stringify(payload),
+    })
+  },
+  createGroundedReport,
+  createInvestmentReport,
 }

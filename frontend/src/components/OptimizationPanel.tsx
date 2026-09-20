@@ -20,14 +20,16 @@ function formatRatio(value: number) {
 function ResultCard({
   title,
   result,
+  assets,
 }: {
   title: string;
   result: {
-    weights: Record<string, number>;
+    weights: number[];
     expected_return: number;
     volatility: number;
     sharpe_ratio: number;
   };
+  assets: string[];
 }) {
   return (
     <div className="optimization-result">
@@ -48,9 +50,9 @@ function ResultCard({
       </div>
 
       <div className="weights-list">
-        {Object.entries(result.weights).map(([asset, weight]) => (
-          <div className="weight-row" key={asset}>
-            <span>{asset}</span>
+        {result.weights.map((weight, index) => (
+          <div className="weight-row" key={assets[index] ?? index}>
+            <span>{assets[index] ?? `Asset ${index + 1}`}</span>
             <strong>{formatPercent(weight)}</strong>
           </div>
         ))}
@@ -245,16 +247,18 @@ export function OptimizationPanel() {
           </div>
 
           <div className="result-grid">
-            <ResultCard title="Equal Weight" result={results.equal_weight} />
+            <ResultCard title="Equal Weight" result={results.equal_weight ?? results.results[0]!} assets={assets} />
             <ResultCard
               title="Minimum Volatility"
-              result={results.minimum_volatility}
+              result={results.minimum_volatility ?? results.results[1]!}
+              assets={assets}
             />
             <ResultCard
               title="Maximum Sharpe"
-              result={results.maximum_sharpe}
+              result={results.maximum_sharpe ?? results.results[2]!}
+              assets={assets}
             />
-            <ResultCard title="Risk Parity" result={results.risk_parity} />
+            <ResultCard title="Risk Parity" result={results.risk_parity ?? results.results[3]!} assets={assets} />
           </div>
         </div>
       )}

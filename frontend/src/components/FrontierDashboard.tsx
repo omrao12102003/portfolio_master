@@ -249,16 +249,16 @@ export function FrontierDashboard() {
                 <span>Sharpe</span>
               </div>
 
-              <MethodRow name="Equal Weight" result={optimization.equal_weight} />
+              <MethodRow name="Equal Weight" result={optimization.equal_weight ?? optimization.results[0]!} />
               <MethodRow
                 name="Minimum Volatility"
-                result={optimization.minimum_volatility}
+                result={optimization.minimum_volatility ?? optimization.results[1]!}
               />
               <MethodRow
                 name="Maximum Sharpe"
-                result={optimization.maximum_sharpe}
+                result={optimization.maximum_sharpe ?? optimization.results[2]!}
               />
-              <MethodRow name="Risk Parity" result={optimization.risk_parity} />
+              <MethodRow name="Risk Parity" result={optimization.risk_parity ?? optimization.results[3]!} />
             </div>
           </div>
         </>

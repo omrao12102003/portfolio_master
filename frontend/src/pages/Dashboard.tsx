@@ -1,153 +1,125 @@
-import { useEffect, useState } from "react";
-import { MetricCard } from "../components/MetricCard";
-import { api } from "../services/api";
-import type { ReturnsResponse } from "../types/api";
+import { useEffect, useState } from "react"
+import MetricCard from "../components/MetricCard"
+import ConnectionStatus from "../components/ConnectionStatus"
+import { calculateReturns, getHealth, getReadiness } from "../services/api"
+import type { ReturnsResponse } from "../types/api"
 
-const SAMPLE_RETURNS = [
-  0.004,
-  0.002,
-  -0.003,
-  0.006,
-  0.003,
-  -0.001,
-  0.005,
-  0.002,
-  -0.002,
-  0.004,
-  0.003,
-  0.001,
-];
+const sampleReturns = [
+  0.004, -0.002, 0.006, 0.003, -0.001, 0.005, 0.002,
+  -0.003, 0.004, 0.006, -0.002, 0.003,
+]
 
-function formatPercent(value: number) {
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-function formatRatio(value: number) {
-  return Number.isFinite(value) ? value.toFixed(2) : "N/A";
-}
-
-export function Dashboard() {
-  const [metrics, setMetrics] = useState<ReturnsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function Dashboard() {
+  const [connected, setConnected] = useState(false)
+  const [environment, setEnvironment] = useState("—")
+  const [metrics, setMetrics] = useState<ReturnsResponse | null>(null)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    api
-      .calculateReturns(SAMPLE_RETURNS)
-      .then(setMetrics)
-      .catch(() => {
-        setError("Unable to load portfolio analytics from the API.");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    async function load() {
+      try {
+        const [, readiness, returns] = await Promise.all([
+          getHealth(),
+          getReadiness(),
+          calculateReturns(sampleReturns),
+        ])
 
-  const metricCards = metrics
-    ? [
-        {
-          label: "Cumulative Return",
-          value: formatPercent(metrics.total_return),
-          description: "Calculated by the quantitative backend",
-        },
-        {
-          label: "Annualized Return",
-          value: formatPercent(metrics.annualized_return),
-          description: "Annualized historical return",
-        },
-        {
-          label: "Volatility",
-          value: formatPercent(metrics.annualized_volatility),
-          description: "Annualized portfolio volatility",
-        },
-        {
-          label: "Sharpe Ratio",
-          value: formatRatio(metrics.sharpe_ratio),
-          description: "Risk-adjusted return",
-        },
-      ]
-    : [];
+        setConnected(true)
+        setEnvironment(readiness.environment)
+        setMetrics(returns)
+      } catch (err) {
+        setConnected(false)
+        setError(err instanceof Error ? err.message : "API unavailable")
+      }
+    }
+
+    void load()
+  }, [])
 
   return (
-    <section>
+    <>
       <div className="page-heading">
         <div>
-          <h2>Investment Dashboard</h2>
-          <p>
-            Monitor portfolio performance, risk, optimization and research
-            signals from one workspace.
-          </p>
+          <span className="eyebrow">Overview</span>
+          <h2>Portfolio Dashboard</h2>
+          <p>Live quantitative analytics from the Portfolio Master API.</p>
         </div>
-
-        <button className="primary-button" type="button">
-          Build Portfolio
-        </button>
+        <ConnectionStatus connected={connected} />
       </div>
 
-      {loading && (
-        <div className="panel state-panel">
-          <strong>Loading quantitative analytics...</strong>
-          <span>Requesting metrics from the FastAPI backend.</span>
-        </div>
-      )}
+      {error && <div className="alert">{error}</div>}
 
-      {error && (
-        <div className="panel state-panel error-panel">
-          <strong>Analytics unavailable</strong>
-          <span>{error}</span>
-        </div>
-      )}
+      <div className="metric-grid">
+        <MetricCard
+          label="Cumulative Return"
+          value={metrics ? `${(metrics.cumulative_return * 100).toFixed(2)}%` : "—"}
+        />
+        <MetricCard
+          label="Annualized Return"
+          value={metrics ? `${(metrics.annualized_return * 100).toFixed(2)}%` : "—"}
+        />
+        <MetricCard
+          label="Volatility"
+          value={metrics ? `${(metrics.annualized_volatility * 100).toFixed(2)}%` : "—"}
+        />
+        <MetricCard
+          label="Sharpe Ratio"
+          value={metrics ? metrics.sharpe_ratio.toFixed(2) : "—"}
+        />
+      </div>
 
-      {!loading && !error && metrics && (
-        <>
-          <div className="metric-grid">
-            {metricCards.map((metric) => (
-              <MetricCard key={metric.label} {...metric} />
-            ))}
-          </div>
-
-          <div className="dashboard-grid">
-            <div className="panel performance-panel">
-              <div className="panel-header">
-                <div>
-                  <h3>Quantitative Performance</h3>
-                  <p>Metrics returned directly from the FastAPI analytics engine</p>
-                </div>
-              </div>
-
-              <div className="analytics-table">
-                <div>
-                  <span>Downside Volatility</span>
-                  <strong>{formatPercent(metrics.downside_volatility)}</strong>
-                </div>
-                <div>
-                  <span>Sortino Ratio</span>
-                  <strong>{formatRatio(metrics.sortino_ratio)}</strong>
-                </div>
-                <div>
-                  <span>Maximum Drawdown</span>
-                  <strong>{formatPercent(metrics.maximum_drawdown)}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <h3>Backend Status</h3>
-                  <p>Live application architecture</p>
-                </div>
-              </div>
-
-              <div className="backend-status">
-                <div className="status-check">✓</div>
-                <div>
-                  <strong>Quant API operational</strong>
-                  <span>Frontend → FastAPI → Analytics Engine</span>
-                </div>
-              </div>
+      <div className="dashboard-grid">
+        <section className="panel">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">Risk profile</span>
+              <h3>Portfolio Statistics</h3>
             </div>
           </div>
-        </>
-      )}
-    </section>
-  );
+
+          <div className="stat-list">
+            <div>
+              <span>Downside volatility</span>
+              <strong>
+                {metrics?.downside_volatility
+                  ? `${(metrics.downside_volatility * 100).toFixed(2)}%`
+                  : "—"}
+              </strong>
+            </div>
+            <div>
+              <span>Sortino ratio</span>
+              <strong>
+                {metrics?.sortino_ratio?.toFixed(2) ?? "—"}
+              </strong>
+            </div>
+            <div>
+              <span>Maximum drawdown</span>
+              <strong>
+                {metrics?.maximum_drawdown
+                  ? `${(metrics.maximum_drawdown * 100).toFixed(2)}%`
+                  : "—"}
+              </strong>
+            </div>
+            <div>
+              <span>Environment</span>
+              <strong>{environment}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel">
+          <span className="eyebrow">Workflow</span>
+          <h3>Research Pipeline</h3>
+          <div className="workflow-list">
+            <span>01 · Market data</span>
+            <span>02 · Portfolio analytics</span>
+            <span>03 · Risk & optimization</span>
+            <span>04 · Historical backtest</span>
+            <span>05 · SEC research & RAG</span>
+            <span>06 · Grounded reporting</span>
+          </div>
+        </section>
+      </div>
+    </>
+  )
 }

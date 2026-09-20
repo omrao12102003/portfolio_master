@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.research.database import get_database_url
+from app.research.embeddings import HashEmbeddingProvider
 from app.research.investment_workflow import InvestmentResearchWorkflow
 from app.research.reporting import ReportMetric, render_markdown, report_to_dict
 from app.research.semantic_retrieval import SemanticResearchRetriever
@@ -34,8 +36,10 @@ class InvestmentWorkflowRequest(BaseModel):
 
 
 def _build_workflow() -> InvestmentResearchWorkflow:
-    store = ResearchVectorStore()
-    retriever = SemanticResearchRetriever(store)
+    store = ResearchVectorStore(get_database_url(), 256)
+    store.initialize()
+    provider = HashEmbeddingProvider(dimension=256)
+    retriever = SemanticResearchRetriever(store, provider)
     return InvestmentResearchWorkflow(retriever)
 
 

@@ -1,16 +1,17 @@
 import { NavLink } from "react-router-dom";
-import { ConnectionStatus } from "./ConnectionStatus";
 import { useEffect, useState } from "react";
+import { ConnectionStatus } from "./ConnectionStatus";
 import { api } from "../services/api";
 
 const navigation = [
   { label: "Dashboard", path: "/" },
   { label: "Portfolio", path: "/portfolio" },
   { label: "Optimization", path: "/optimization" },
-  { label: "Risk", path: "/risk" },
+  { label: "Efficient Frontier", path: "/frontier" },
+  { label: "Risk Analytics", path: "/risk" },
   { label: "Backtesting", path: "/backtesting" },
-    { label: "RL Portfolio", path: "/rl" },
-  { label: "Research", path: "/research" },
+  { label: "RL Portfolio", path: "/rl" },
+  { label: "Research Copilot", path: "/research" },
 ];
 
 export function Sidebar() {
@@ -23,6 +24,7 @@ export function Sidebar() {
       .catch(() => setConnected(false))
       .finally(() => setLoading(false));
   }, []);
+
   return (
     <aside className="sidebar">
       <div className="brand">

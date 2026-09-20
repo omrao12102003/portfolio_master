@@ -1,22 +1,27 @@
 interface ConnectionStatusProps {
-  connected: boolean;
-  loading?: boolean;
+  connected: boolean
+  loading?: boolean
 }
 
 export function ConnectionStatus({
   connected,
   loading = false,
 }: ConnectionStatusProps) {
-  const label = loading
-    ? "Connecting..."
-    : connected
-      ? "API connected"
-      : "API offline";
+  if (loading) {
+    return (
+      <div className="connection-status">
+        <span className="connection-dot" />
+        <span>Checking API...</span>
+      </div>
+    )
+  }
 
   return (
-    <div className="sidebar-footer">
-      <span className={`status-dot ${connected ? "connected" : "offline"}`} />
-      {label}
+    <div className="connection-status">
+      <span className={`connection-dot ${connected ? "connected" : "disconnected"}`} />
+      <span>{connected ? "API Connected" : "API Offline"}</span>
     </div>
-  );
+  )
 }
+
+export default ConnectionStatus

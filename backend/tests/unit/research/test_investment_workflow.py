@@ -13,10 +13,10 @@ class FakeResult:
 
 
 class FakeRetriever:
-    def search(self, query, *, filters, top_k):
+    def retrieve(self, query, *, filters, limit):
         assert query == "Assess Apple risk"
         assert filters.ticker == "AAPL"
-        assert top_k == 2
+        assert limit == 2
 
         return [
             FakeResult(
