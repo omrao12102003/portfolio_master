@@ -6,6 +6,7 @@ from app.api.routes.factor_time_series import router as factor_time_series_route
 from app.api.routes.fixed_income import router as fixed_income_router
 from app.api.routes.grounded_reports import router as grounded_reports_router
 from app.api.routes.health import router as health_router
+from app.api.routes.investment_workflow import router as investment_workflow_router
 from app.api.routes.quant import router as quant_router
 from app.api.routes.reporting import router as reporting_router
 from app.api.routes.research import router as research_router
@@ -25,3 +26,4 @@ api_router.include_router(trading_router)
 
 api_router.include_router(reporting_router)
 api_router.include_router(grounded_reports_router)
+api_router.include_router(investment_workflow_router)
