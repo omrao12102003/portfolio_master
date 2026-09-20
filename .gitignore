@@ -53,6 +53,3 @@ data/processed/*
 
 # Jupyter
 .ipynb_checkpoints/
-
-# Local Docker bind mounts (named volumes are outside the repo)
-docker/data/
