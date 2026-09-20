@@ -127,5 +127,12 @@ class HybridResearchRetriever:
 
     @staticmethod
     def _semantic_score(candidate: VectorSearchResult) -> float:
-        distance = float(candidate.distance)
-        return max(0.0, min(1.0, 1.0 - distance))
+        similarity = getattr(candidate, "similarity", None)
+        if similarity is not None:
+            return float(similarity)
+
+        distance = getattr(candidate, "distance", None)
+        if distance is not None:
+            return 1.0 - float(distance)
+
+        raise AttributeError("Retrieval result has neither similarity nor distance.")
