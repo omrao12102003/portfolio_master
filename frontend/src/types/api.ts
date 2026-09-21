@@ -33,10 +33,10 @@ export interface OptimizationResult {
 
 export interface OptimizationResponse {
   results: OptimizationResult[]
-  equal_weight?: OptimizationResult
-  minimum_volatility?: OptimizationResult
-  maximum_sharpe?: OptimizationResult
-  risk_parity?: OptimizationResult
+  equal_weight: OptimizationResult
+  minimum_volatility: OptimizationResult
+  maximum_sharpe: OptimizationResult
+  risk_parity: OptimizationResult
 }
 
 export interface RiskResponse {

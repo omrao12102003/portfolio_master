@@ -58,13 +58,79 @@ export function calculateReturns(
   })
 }
 
-export function optimizePortfolio(
+export async function optimizePortfolio(
   payload: PortfolioRequest,
 ): Promise<OptimizationResponse> {
-  return request("/quant/optimize", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  const response = await request<Record<string, Record<string, number>>>(
+    "/quant/optimize",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  )
+
+  const methods = [
+    ["equal_weight", "Equal Weight"],
+    ["minimum_volatility", "Minimum Volatility"],
+    ["maximum_sharpe", "Maximum Sharpe"],
+    ["risk_parity", "Risk Parity"],
+  ] as const
+
+  const buildResult = (
+    key: (typeof methods)[number][0],
+    method: string,
+  ) => {
+    const weightsByAsset = response[key] ?? {}
+    const weights = payload.assets.map(
+      (asset) => weightsByAsset[asset] ?? 0,
+    )
+
+    const expectedReturn = weights.reduce(
+      (total, weight, index) =>
+        total + weight * (payload.expected_returns[index] ?? 0),
+      0,
+    )
+
+    const variance = weights.reduce(
+      (total, weight, row) =>
+        total +
+        weight *
+          weights.reduce(
+            (inner, otherWeight, column) =>
+              inner +
+              otherWeight *
+                (payload.covariance[row]?.[column] ?? 0),
+            0,
+          ),
+        0,
+    )
+
+    const volatility = Math.sqrt(Math.max(variance, 0))
+    const sharpeRatio =
+      volatility > 0
+        ? (expectedReturn - payload.risk_free_rate) / volatility
+        : 0
+
+    return {
+      method,
+      weights,
+      expected_return: expectedReturn,
+      volatility,
+      sharpe_ratio: sharpeRatio,
+    }
+  }
+
+  const results = methods.map(([key, method]) =>
+    buildResult(key, method),
+  )
+
+  return {
+    results,
+    equal_weight: results[0]!,
+    minimum_volatility: results[1]!,
+    maximum_sharpe: results[2]!,
+    risk_parity: results[3]!,
+  }
 }
 
 export function calculateRisk(

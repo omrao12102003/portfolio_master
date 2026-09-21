@@ -247,18 +247,18 @@ export function OptimizationPanel() {
           </div>
 
           <div className="result-grid">
-            <ResultCard title="Equal Weight" result={results.equal_weight ?? results.results[0]!} assets={assets} />
+            <ResultCard title="Equal Weight" result={results.equal_weight} assets={assets} />
             <ResultCard
               title="Minimum Volatility"
-              result={results.minimum_volatility ?? results.results[1]!}
+              result={results.minimum_volatility}
               assets={assets}
             />
             <ResultCard
               title="Maximum Sharpe"
-              result={results.maximum_sharpe ?? results.results[2]!}
+              result={results.maximum_sharpe}
               assets={assets}
             />
-            <ResultCard title="Risk Parity" result={results.risk_parity ?? results.results[3]!} assets={assets} />
+            <ResultCard title="Risk Parity" result={results.risk_parity} assets={assets} />
           </div>
         </div>
       )}

@@ -5,11 +5,15 @@ import type { OptimizationResult } from "../types/api"
 
 const assets = ["SPY", "QQQ", "TLT"]
 
+const expectedReturns = [0.08, 0.12, 0.05]
+
 const covariance = [
   [0.04, 0.012, 0.006],
   [0.012, 0.09, 0.004],
   [0.006, 0.004, 0.025],
 ]
+
+const riskFreeRate = 0.02
 
 export default function PortfolioPage() {
   const [results, setResults] = useState<OptimizationResult[]>([])
@@ -23,9 +27,9 @@ export default function PortfolioPage() {
     try {
       const response = await optimizePortfolio({
         assets,
-        expected_returns: [0.08, 0.12, 0.05],
+        expected_returns: expectedReturns,
         covariance,
-        risk_free_rate: 0.02,
+        risk_free_rate: riskFreeRate,
         min_weight: 0,
         max_weight: 1,
       })
@@ -56,7 +60,9 @@ export default function PortfolioPage() {
       <section className="panel">
         <div className="asset-row">
           {assets.map((asset) => (
-            <span className="asset-chip" key={asset}>{asset}</span>
+            <span className="asset-chip" key={asset}>
+              {asset}
+            </span>
           ))}
         </div>
       </section>
