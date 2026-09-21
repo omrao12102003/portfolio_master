@@ -24,14 +24,34 @@ systematic investing, and Python/AI engineering in finance.
 
 ## Current status
 
-**Stage 1A — project architecture and development environment.**
+**Production-ready prototype — quantitative engine, research platform, and frontend implemented.**
 
-The repository now has a reproducible backend foundation, a minimal React shell, PostgreSQL
-+ pgvector infrastructure via Docker Compose, and architecture documentation.
+Portfolio Master now contains the core quantitative-finance, portfolio-management, reinforcement-learning, financial-research, and web-application layers.
 
-Stage 1A does **not** contain the quantitative investment engine. There is no market-data
-ingestion, no optimizer, no risk formulas, no backtester, no RL agent, and no RAG/LLM
-pipeline.
+Validated components include:
+
+- Market-data ingestion and normalization
+- Portfolio and return analytics
+- Risk analytics and risk attribution
+- Classical portfolio optimization
+- Efficient frontier generation
+- Historical backtesting
+- Time-series and factor models
+- Derivatives pricing and Greeks
+- Fixed-income analytics
+- Trading research and walk-forward evaluation
+- Reinforcement-learning portfolio management
+- SEC financial-document ingestion and chunking
+- PostgreSQL + pgvector retrieval
+- Semantic and hybrid RAG
+- Grounded research reporting
+- React/TypeScript portfolio dashboards
+- FastAPI quantitative and research APIs
+- Production deployment configuration for Render and Vercel
+
+The latest pre-deployment validation passed the backend regression suite, Ruff, frontend lint/build, API health/readiness checks, deterministic quantitative checks, real market-data checks, chronological leakage checks, RL validation, and SEC/RAG historical cutoff validation.
+
+The project is a serious quantitative-finance research prototype, not an institutional trading system. Historical backtests and model outputs are empirical results under stated assumptions and are not guarantees of future performance.
 
 ## Final architecture overview
 
@@ -75,7 +95,7 @@ flowchart TB
 | Config | pydantic-settings, `.env` | Environment-based configuration |
 | Frontend | Vite, React, TypeScript | Minimal professional shell |
 | Database | PostgreSQL with pgvector image | Infrastructure only; no app schema yet |
-| Packaging | Docker Compose + backend Dockerfile | Dev database; optional API container |
+| Packaging | pyproject.toml | Backend dependency and packaging source of truth |
 | Tests | pytest, pytest-cov, httpx | Health and configuration tests |
 | Lint | Ruff | Backend style |
 
@@ -88,10 +108,10 @@ installed yet.
 backend/                 FastAPI application and tests
 frontend/                Vite + React + TypeScript shell
 docs/                    Architecture and development documentation
-data/                    Reserved for market data (not ingested in Stage 1A)
+data/                    Market-data and sample-data workspace
 notebooks/               Exploration only
 scripts/                 Reserved for later operational scripts
-docker-compose.yml       PostgreSQL + pgvector (optional API profile)
+render.yaml              Render backend deployment configuration
 .env.example             Configuration template
 ```
 
@@ -113,7 +133,7 @@ The project is developed incrementally. See
 
 - Python 3.11+
 - Node.js 20+
-- Docker Desktop if you want PostgreSQL running locally
+- PostgreSQL 16+ with pgvector for local development
 
 Full commands: [docs/development/local-setup.md](docs/development/local-setup.md).
 
@@ -151,23 +171,25 @@ Build check:
 cd frontend && npm run build
 ```
 
-The Stage 1A UI does not load portfolios or charts.
+The frontend provides portfolio, optimization, risk, backtesting, frontier, RL, and research dashboards.
 
-## Database / Docker setup
+## Database setup
 
-```bash
-docker compose up -d postgres
-docker compose config
-```
+Portfolio Master uses native PostgreSQL with pgvector for local development.
 
-Optional API container:
+Verify PostgreSQL:
 
 ```bash
-docker compose --profile api up --build
+pg_isready
 ```
 
-Compose uses development credentials from `.env` / `.env.example`. This is not a
-production deployment.
+The research vector store uses PostgreSQL with the `vector` extension.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Docker is not required for local or production deployment.
 
 ## Testing
 
@@ -187,18 +209,11 @@ python -m pytest
 ## Environment configuration
 
 Copy `.env.example` to `.env`. Required to start Postgres via Compose: `POSTGRES_*`.
-Application fields have code defaults. There are no vendor API keys in Stage 1A.
+Application fields have code defaults. Production secrets must be supplied through deployment environment variables.
 
 ## Current limitations
 
-- No market data and no vendor integrations
-- No portfolio math
-- No persistence schema
-- No authentication
-- No WebSockets
-- Frontend is a shell
-- Docker is development infrastructure, not a hardened production stack
-- Backtested performance will never be claimed as live performance
+- The current SEC corpus contains a limited set of indexed filings
 
 ## Development philosophy
 

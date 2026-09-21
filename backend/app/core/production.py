@@ -14,7 +14,7 @@ class ProductionConfig:
 
 
 def get_production_config() -> ProductionConfig:
-    environment = os.getenv("APP_ENV", "development").strip().lower()
+    environment = os.getenv("APP_ENV", os.getenv("APP_ENVIRONMENT", "development")).strip().lower()
     debug = os.getenv("APP_DEBUG", "false").strip().lower() in {
         "1",
         "true",

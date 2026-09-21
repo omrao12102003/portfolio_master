@@ -8,15 +8,21 @@ version = "0.1.0"
 description = "Quantitative portfolio optimization, backtesting, reinforcement learning and AI investment research platform."
 requires-python = ">=3.11"
 dependencies = [
-    "pgvector>=0.8,<1",
+    "pgvector>=0.5,<1",
     "psycopg[binary]>=3.2,<4",
     "fastapi>=0.115,<1",
     "uvicorn[standard]>=0.32,<1",
     "pydantic>=2.9,<3",
     "pydantic-settings>=2.6,<3",
     "pandas>=2.2,<3",
+    "numpy>=2.0,<3",
+    "scipy>=1.14,<2",
+    "statsmodels>=0.14,<1",
+    "arch>=7,<9",
     "pyarrow>=17,<20",
     "yfinance>=0.2,<1",
+    "pypdf>=5,<7",
+    "beautifulsoup4>=4.12,<5",
 ]
 
 [project.optional-dependencies]

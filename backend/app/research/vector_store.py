@@ -186,7 +186,7 @@ class ResearchVectorStore:
         params: list[object] = [query_embedding]
 
         if published_before is not None:
-            filters.append("published_date <= %s")
+            filters.append("published_date < %s")
             params.append(published_before)
 
         if company is not None:
