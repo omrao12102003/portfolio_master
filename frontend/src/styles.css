@@ -524,3 +524,34 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
+.backtest-chart {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.backtest-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 680px;
+  height: 320px;
+}
+
+.backtest-line {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-axis {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.25;
+}
+
+.backtest-chart text {
+  fill: currentColor;
+  opacity: 0.65;
+  font-size: 11px;
+}
