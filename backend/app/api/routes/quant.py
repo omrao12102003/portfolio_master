@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.analytics.returns import (
+    annualized_return,
     annualized_volatility,
     cumulative_returns,
     downside_volatility,
@@ -34,6 +35,7 @@ router = APIRouter(prefix="/quant", tags=["quant"])
 
 class ReturnsRequest(BaseModel):
     returns: list[float] = Field(min_length=2)
+    risk_free_rate: float = Field(default=0.02, ge=-1, le=1)
 
 
 class RiskRequest(BaseModel):
@@ -126,9 +128,14 @@ def calculate_returns(request: ReturnsRequest) -> dict[str, float]:
 
     return {
         "cumulative_return": float(cumulative_returns(series).iloc[-1]),
+        "annualized_return": float(annualized_return(series)),
         "annualized_volatility": float(annualized_volatility(series)),
-        "sharpe_ratio": float(sharpe_ratio(series)),
-        "sortino_ratio": float(sortino_ratio(series)),
+        "sharpe_ratio": float(
+            sharpe_ratio(series, risk_free_rate=request.risk_free_rate)
+        ),
+        "sortino_ratio": float(
+            sortino_ratio(series, risk_free_rate=request.risk_free_rate)
+        ),
         "maximum_drawdown": float(maximum_drawdown(series)),
     }
 
