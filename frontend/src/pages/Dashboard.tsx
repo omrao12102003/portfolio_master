@@ -4,7 +4,6 @@ import ConnectionStatus from "../components/ConnectionStatus"
 import {
   calculateReturns,
   calculateRisk,
-  getHealth,
   getPortfolioData,
   getReadiness,
 } from "../services/api"
@@ -14,6 +13,18 @@ const ASSETS = ["SPY", "QQQ", "TLT"]
 const START_DATE = "2024-01-01"
 const END_DATE = "2024-12-31"
 const RISK_FREE_RATE = 0.02
+
+function formatPercent(value: number | undefined) {
+  return value !== undefined && Number.isFinite(value)
+    ? `${(value * 100).toFixed(2)}%`
+    : "—"
+}
+
+function formatNumber(value: number | undefined) {
+  return value !== undefined && Number.isFinite(value)
+    ? value.toFixed(2)
+    : "—"
+}
 
 export default function Dashboard() {
   const [connected, setConnected] = useState(false)
@@ -25,33 +36,44 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
+      setError("")
+
       try {
-        const [, readiness, portfolio] = await Promise.all([
-          getHealth(),
-          getReadiness(),
-          getPortfolioData({
-            assets: ASSETS,
-            start_date: START_DATE,
-            end_date: END_DATE,
-          }),
-        ])
+        const readiness = await getReadiness()
+        setConnected(true)
+        setEnvironment(readiness.environment)
+      } catch (err) {
+        setConnected(false)
+        setError(
+          err instanceof Error
+            ? `Backend connection failed: ${err.message}`
+            : "Backend connection failed",
+        )
+        return
+      }
+
+      try {
+        const portfolio = await getPortfolioData({
+          assets: ASSETS,
+          start_date: START_DATE,
+          end_date: END_DATE,
+        })
+
+        setObservations(portfolio.observations)
 
         const [returns, riskMetrics] = await Promise.all([
           calculateReturns(portfolio.portfolio_returns, RISK_FREE_RATE),
-          calculateRisk(
-            portfolio.portfolio_returns,
-            RISK_FREE_RATE,
-          ),
+          calculateRisk(portfolio.portfolio_returns, RISK_FREE_RATE),
         ])
 
-        setConnected(true)
-        setEnvironment(readiness.environment)
         setMetrics(returns)
         setRisk(riskMetrics)
-        setObservations(portfolio.observations)
       } catch (err) {
-        setConnected(false)
-        setError(err instanceof Error ? err.message : "API unavailable")
+        setError(
+          err instanceof Error
+            ? `Portfolio analytics failed: ${err.message}`
+            : "Portfolio analytics failed",
+        )
       }
     }
 
@@ -77,35 +99,19 @@ export default function Dashboard() {
       <div className="metric-grid">
         <MetricCard
           label="Cumulative Return"
-          value={
-            metrics
-              ? `${(metrics.cumulative_return * 100).toFixed(2)}%`
-              : "—"
-          }
+          value={formatPercent(metrics?.cumulative_return)}
         />
         <MetricCard
           label="Annualized Return"
-          value={
-            metrics
-              ? `${(metrics.annualized_return * 100).toFixed(2)}%`
-              : "—"
-          }
+          value={formatPercent(metrics?.annualized_return)}
         />
         <MetricCard
           label="Volatility"
-          value={
-            risk
-              ? `${(risk.volatility * 100).toFixed(2)}%`
-              : "—"
-          }
+          value={formatPercent(risk?.volatility)}
         />
         <MetricCard
           label="Sharpe Ratio"
-          value={
-            risk
-              ? risk.sharpe_ratio.toFixed(2)
-              : "—"
-          }
+          value={formatNumber(risk?.sharpe_ratio)}
         />
       </div>
 
@@ -122,25 +128,21 @@ export default function Dashboard() {
             <div>
               <span>Downside volatility</span>
               <strong>
-                {risk
-                  ? `${(risk.downside_volatility * 100).toFixed(2)}%`
-                  : "—"}
+                {formatPercent(risk?.downside_volatility)}
               </strong>
             </div>
 
             <div>
               <span>Sortino ratio</span>
               <strong>
-                {risk ? risk.sortino_ratio.toFixed(2) : "—"}
+                {formatNumber(risk?.sortino_ratio)}
               </strong>
             </div>
 
             <div>
               <span>Maximum drawdown</span>
               <strong>
-                {risk
-                  ? `${(risk.maximum_drawdown * 100).toFixed(2)}%`
-                  : "—"}
+                {formatPercent(risk?.maximum_drawdown)}
               </strong>
             </div>
 

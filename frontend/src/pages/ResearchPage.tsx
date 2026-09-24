@@ -28,7 +28,8 @@ export default function ResearchPage() {
     try {
       const portfolio = await fetch(
         `${(
-          import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+          import.meta.env.VITE_API_BASE_URL ??
+            "https://portfolio-master-api.onrender.com"
         ).replace(/\/$/, "")}/quant/portfolio-data`,
         {
           method: "POST",
@@ -51,7 +52,8 @@ export default function ResearchPage() {
 
       const riskResponse = await fetch(
         `${(
-          import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+          import.meta.env.VITE_API_BASE_URL ??
+            "https://portfolio-master-api.onrender.com"
         ).replace(/\/$/, "")}/quant/risk`,
         {
           method: "POST",

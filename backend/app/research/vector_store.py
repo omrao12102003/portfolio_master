@@ -81,74 +81,79 @@ class ResearchVectorStore:
         if metadata is not None and len(metadata) != len(chunks):
             raise ValueError("metadata must have the same length as chunks.")
 
+        rows = []
+        for index, (chunk, embedding) in enumerate(
+            zip(chunks, embeddings, strict=True)
+        ):
+            if len(embedding) != self.dimension:
+                raise ValueError("Embedding dimension does not match store.")
+
+            rows.append(
+                (
+                    chunk.chunk_id,
+                    chunk.document_id,
+                    chunk.title,
+                    chunk.source,
+                    chunk.published_date,
+                    chunk.section,
+                    chunk.chunk_index,
+                    chunk.content,
+                    embedding,
+                    (
+                        metadata[index].get("company")
+                        if metadata is not None
+                        else None
+                    ),
+                    (
+                        metadata[index].get("ticker")
+                        if metadata is not None
+                        else None
+                    ),
+                    (
+                        metadata[index].get("document_type")
+                        if metadata is not None
+                        else None
+                    ),
+                )
+            )
+
         with self._connect() as connection:
             with connection.cursor() as cursor:
-                for index, (chunk, embedding) in enumerate(
-                    zip(chunks, embeddings, strict=True)
-                ):
-                    if len(embedding) != self.dimension:
-                        raise ValueError("Embedding dimension does not match store.")
-
-                    cursor.execute(
-                        """
-                        INSERT INTO research_chunks (
-                            chunk_id,
-                            document_id,
-                            title,
-                            source,
-                            published_date,
-                            section,
-                            chunk_index,
-                            content,
-                            embedding,
-                            company,
-                            ticker,
-                            document_type
-                        )
-                        VALUES (
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                            %s, %s, %s
-                        )
-                        ON CONFLICT (chunk_id) DO UPDATE SET
-                            document_id = EXCLUDED.document_id,
-                            title = EXCLUDED.title,
-                            source = EXCLUDED.source,
-                            published_date = EXCLUDED.published_date,
-                            section = EXCLUDED.section,
-                            chunk_index = EXCLUDED.chunk_index,
-                            content = EXCLUDED.content,
-                            embedding = EXCLUDED.embedding,
-                            company = EXCLUDED.company,
-                            ticker = EXCLUDED.ticker,
-                            document_type = EXCLUDED.document_type
-                        """,
-                        (
-                            chunk.chunk_id,
-                            chunk.document_id,
-                            chunk.title,
-                            chunk.source,
-                            chunk.published_date,
-                            chunk.section,
-                            chunk.chunk_index,
-                            chunk.content,
-                            embedding,
-                            (
-                                metadata[index].get("company")
-                                if metadata is not None
-                                else None
-                            ),
-                            (
-                                metadata[index].get("ticker")
-                                if metadata is not None
-                                else None
-                            ),
-                            (
-                                metadata[index].get("document_type")
-                                if metadata is not None
-                                else None
-                            ),
-                        ),
+                cursor.executemany(
+                    """
+                    INSERT INTO research_chunks (
+                        chunk_id,
+                        document_id,
+                        title,
+                        source,
+                        published_date,
+                        section,
+                        chunk_index,
+                        content,
+                        embedding,
+                        company,
+                        ticker,
+                        document_type
                     )
+                    VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s
+                    )
+                    ON CONFLICT (chunk_id) DO UPDATE SET
+                        document_id = EXCLUDED.document_id,
+                        title = EXCLUDED.title,
+                        source = EXCLUDED.source,
+                        published_date = EXCLUDED.published_date,
+                        section = EXCLUDED.section,
+                        chunk_index = EXCLUDED.chunk_index,
+                        content = EXCLUDED.content,
+                        embedding = EXCLUDED.embedding,
+                        company = EXCLUDED.company,
+                        ticker = EXCLUDED.ticker,
+                        document_type = EXCLUDED.document_type
+                    """,
+                    rows,
+                )
 
     def count(self) -> int:
         with self._connect() as connection:
