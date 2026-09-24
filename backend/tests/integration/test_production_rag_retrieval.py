@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -6,7 +8,14 @@ from app.research.corpus_indexer import FinancialCorpusIndexer
 from app.research.embeddings import HashEmbeddingProvider
 from app.research.vector_store import ResearchVectorStore
 
-METADATA = "data/research/metadata/corpus.json"
+METADATA = (
+    Path(__file__).resolve().parents[3]
+    / "backend"
+    / "data"
+    / "research"
+    / "metadata"
+    / "corpus.json"
+)
 DATABASE_URL = "postgresql://localhost/portfolio_master"
 
 

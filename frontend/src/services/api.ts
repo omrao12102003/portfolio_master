@@ -212,25 +212,11 @@ export async function calculateFrontier(
   target_return: number
   expected_return: number
   volatility: number
-  sharpe_ratio: number
-  weights: number[]
 }[]> {
-  const response = await request<{
-    points: {
-      expected_return: number
-      volatility: number
-      sharpe_ratio: number
-      weights: number[]
-    }[]
-  }>("/quant/frontier", {
+  return request("/quant/frontier", {
     method: "POST",
     body: JSON.stringify(payload),
   })
-
-  return response.points.map((point) => ({
-    ...point,
-    target_return: point.expected_return,
-  }))
 }
 
 export async function evaluateRL(payload: {

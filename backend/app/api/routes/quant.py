@@ -46,6 +46,9 @@ class PortfolioRequest(BaseModel):
     assets: list[str] = Field(min_length=2)
     expected_returns: list[float] = Field(min_length=2)
     covariance: list[list[float]] = Field(min_length=2)
+    risk_free_rate: float = Field(default=0.02, ge=-1, le=1)
+    min_weight: float = Field(default=0.0, ge=0, le=1)
+    max_weight: float = Field(default=1.0, ge=0, le=1)
 
 
 class PortfolioDataRequest(BaseModel):
@@ -73,6 +76,24 @@ def _portfolio_inputs(request: PortfolioRequest):
         raise HTTPException(
             status_code=400,
             detail="Asset, return, and covariance dimensions must match.",
+        )
+
+    if request.min_weight > request.max_weight:
+        raise HTTPException(
+            status_code=400,
+            detail="min_weight must be <= max_weight.",
+        )
+
+    if len(request.assets) * request.min_weight > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimum weight constraints are infeasible for this number of assets.",
+        )
+
+    if len(request.assets) * request.max_weight < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum weight constraints are infeasible for this number of assets.",
         )
 
     assets = pd.Index(request.assets)
@@ -155,14 +176,21 @@ def optimize_portfolio(
         "minimum_volatility": minimum_volatility(
             expected_returns,
             covariance,
+            min_weight=request.min_weight,
+            max_weight=request.max_weight,
         ),
         "maximum_sharpe": maximum_sharpe(
             expected_returns,
             covariance,
+            risk_free_rate=request.risk_free_rate,
+            min_weight=request.min_weight,
+            max_weight=request.max_weight,
         ),
         "risk_parity": risk_parity(
             expected_returns,
             covariance,
+            min_weight=request.min_weight,
+            max_weight=request.max_weight,
         ),
     }
 
@@ -182,6 +210,8 @@ def calculate_frontier(
         expected_returns,
         covariance,
         points=20,
+        min_weight=request.min_weight,
+        max_weight=request.max_weight,
     )
 
     return result.to_dict(orient="records")

@@ -6,7 +6,6 @@ import type {
 } from "../types/api";
 
 const DEFAULT_ASSETS = ["SPY", "QQQ", "TLT"];
-
 const DEFAULT_EXPECTED_RETURNS = [0.08, 0.12, 0.05];
 
 function formatPercent(value: number) {
@@ -68,6 +67,7 @@ export function OptimizationPanel() {
   );
   const [minWeight, setMinWeight] = useState(0);
   const [maxWeight, setMaxWeight] = useState(1);
+  const [riskFreeRate, setRiskFreeRate] = useState(0.02);
   const [results, setResults] = useState<OptimizationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,19 +91,33 @@ export function OptimizationPanel() {
     setError(null);
 
     try {
+      if (minWeight > maxWeight) {
+        throw new Error("Minimum weight must be less than or equal to maximum weight.");
+      }
+
+      if (assets.length * minWeight > 1) {
+        throw new Error("Minimum weight constraints are infeasible for this portfolio.");
+      }
+
+      if (assets.length * maxWeight < 1) {
+        throw new Error("Maximum weight constraints are infeasible for this portfolio.");
+      }
+
       const portfolioData = await api.getPortfolioData({
         assets,
         start_date: "2024-01-01",
         end_date: "2024-12-31",
       });
 
-      setExpectedReturns(portfolioData.expected_returns);
+      if (expectedReturns.length !== portfolioData.assets.length) {
+        throw new Error("Expected return assumptions must match the selected assets.");
+      }
 
       const payload: PortfolioRequest = {
         assets: portfolioData.assets,
-        expected_returns: portfolioData.expected_returns,
+        expected_returns: expectedReturns,
         covariance: portfolioData.covariance,
-        risk_free_rate: 0.02,
+        risk_free_rate: riskFreeRate,
         min_weight: minWeight,
         max_weight: maxWeight,
       };
@@ -128,8 +142,9 @@ export function OptimizationPanel() {
         <div>
           <h2>Portfolio Optimization</h2>
           <p>
-            Configure portfolio assumptions and run the quantitative
-            optimization engine through the FastAPI backend.
+            Historical covariance is estimated from market data. Expected
+            returns, risk-free rate and weight limits are explicit model
+            assumptions.
           </p>
         </div>
       </div>
@@ -157,7 +172,7 @@ export function OptimizationPanel() {
                 </label>
 
                 <label>
-                  Expected return
+                  Expected return assumption (%)
                   <input
                     type="number"
                     step="0.5"
@@ -195,6 +210,18 @@ export function OptimizationPanel() {
                 onChange={(event) => setMaxWeight(Number(event.target.value))}
               />
             </label>
+
+            <label>
+              Risk-free rate (%)
+              <input
+                type="number"
+                step="0.25"
+                value={(riskFreeRate * 100).toFixed(2)}
+                onChange={(event) =>
+                  setRiskFreeRate(Number(event.target.value) / 100)
+                }
+              />
+            </label>
           </div>
 
           <button
@@ -212,26 +239,27 @@ export function OptimizationPanel() {
         <div className="panel methodology-panel">
           <h3>Optimization Methods</h3>
           <p>
-            The backend evaluates multiple portfolio construction approaches
-            using the same return, covariance and constraint assumptions.
+            Minimum Volatility, Maximum Sharpe and Risk Parity respect the
+            supplied weight bounds. Equal Weight is shown as an unconstrained
+            baseline.
           </p>
 
           <div className="method-list">
             <div>
               <strong>Equal Weight</strong>
-              <span>Baseline allocation</span>
+              <span>Unconstrained baseline allocation</span>
             </div>
             <div>
               <strong>Minimum Volatility</strong>
-              <span>Minimize portfolio risk</span>
+              <span>Minimize portfolio volatility subject to bounds</span>
             </div>
             <div>
               <strong>Maximum Sharpe</strong>
-              <span>Optimize risk-adjusted return</span>
+              <span>Maximize excess return per unit of volatility</span>
             </div>
             <div>
               <strong>Risk Parity</strong>
-              <span>Balance portfolio risk contribution</span>
+              <span>Balance marginal portfolio risk contributions</span>
             </div>
           </div>
         </div>
@@ -242,12 +270,16 @@ export function OptimizationPanel() {
           <div className="section-title">
             <div>
               <h3>Optimization Results</h3>
-              <p>Calculated by the quantitative optimization engine</p>
+              <p>Calculated from the supplied assumptions and historical covariance</p>
             </div>
           </div>
 
           <div className="result-grid">
-            <ResultCard title="Equal Weight" result={results.equal_weight} assets={assets} />
+            <ResultCard
+              title="Equal Weight"
+              result={results.equal_weight}
+              assets={assets}
+            />
             <ResultCard
               title="Minimum Volatility"
               result={results.minimum_volatility}
@@ -258,7 +290,11 @@ export function OptimizationPanel() {
               result={results.maximum_sharpe}
               assets={assets}
             />
-            <ResultCard title="Risk Parity" result={results.risk_parity} assets={assets} />
+            <ResultCard
+              title="Risk Parity"
+              result={results.risk_parity}
+              assets={assets}
+            />
           </div>
         </div>
       )}
